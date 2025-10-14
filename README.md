@@ -8,13 +8,14 @@ Python interface for the Leopard Imaging LI-VG5761 DMS (Driver Monitoring System
 - 1944 × 1204 single-channel (grayscale) image capture
 - Real-time live preview with CV2
 - Image flip controls (horizontal/vertical)
-- Frame saving (PNG/BMP formats)
-- Continuous recording mode
+- Frame saving (PNG/BMP/TIFF formats)
+- Continuous recording mode with 16-bit raw or 8-bit processed output
+- Threaded architecture for high-performance capture and saving
 
 ## Requirements
 
 ```bash
-pip install numpy opencv-python pyudev
+pip install numpy opencv-python pyudev tifffile imagecodecs
 ```
 
 ## Usage
@@ -55,6 +56,10 @@ cam.save("image.png")
 
 # Save as BMP
 cam.save("image.bmp", format='bmp')
+
+# Save 16-bit raw data (lossless)
+cam.set_save_raw(True)
+cam.save("image_raw.png")
 ```
 
 ### Flip Control
@@ -64,6 +69,21 @@ cam.save("image.bmp", format='bmp')
 cam.flip_h = True   # Horizontal flip
 cam.flip_v = True   # Vertical flip
 ```
+
+### Continuous Recording Mode
+
+```python
+# Set to save 16-bit raw TIFF files (lossless, ~2.3MB per frame)
+cam.set_save_raw(True)
+
+# Show live preview and press 's' to start/stop recording
+cam.show()
+```
+
+During live preview, press `s` to toggle recording. When recording is active:
+- 16-bit raw mode: Saves lossless TIFF files (`frame_00000_raw.tiff`)
+- 8-bit processed mode: Saves PNG files (`frame_00000.png`)
+- Live FPS statistics shown on screen
 
 ## Camera Specifications
 

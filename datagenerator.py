@@ -174,15 +174,24 @@ class LeopardDMSCam(LeopardDMSCamBase):
 
     def _save_thread(self, save_queue, stop_event, save_dir, save_raw, stats):
         """Thread for saving frames to disk."""
+        
+        try:
+            import tifffile as tiff
+            self._have_tifffile = True
+        except Exception:
+            print("ERROR: tifffile is required. Install with: pip install tifffile")
+
+        
         while not stop_event.is_set() or not save_queue.empty():
             try:
                 frame_data = save_queue.get(timeout=0.1)
                 gray8, mono16, frame_index = frame_data
 
                 if save_raw:
-                    # Save 16-bit PNG (lossless compression)
-                    save_path = os.path.join(save_dir, f"frame_{frame_index:05d}_raw.png")
-                    cv2.imwrite(save_path, mono16)
+                    # Save 16-bit TIFF (lossless compression)
+                    save_path = os.path.join(save_dir, f"frame_{frame_index:05d}_raw.tiff")
+                    tiff.imwrite(save_path, mono16, compression='lzw', predictor=2)
+                    # cv2.imwrite(save_path, mono16)
                 else:
                     # Save 8-bit PNG
                     save_path = os.path.join(save_dir, f"frame_{frame_index:05d}.png")
