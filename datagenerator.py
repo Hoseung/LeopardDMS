@@ -5,6 +5,7 @@ import os
 import threading
 import queue
 import time
+from datetime import datetime
 
 
 def sigmoid(image, k=0.001):
@@ -262,19 +263,29 @@ class LeopardDMSCam(LeopardDMSCamBase):
                 if save_mode:
                     # Start saving
                     frame_index = 0
-                    os.makedirs(self._save_dir, exist_ok=True)
+
+                    # Check if save_dir exists and is not empty
+                    if os.path.exists(self._save_dir) and os.listdir(self._save_dir):
+                        # Create a new timestamped subdirectory
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        session_save_dir = os.path.join(self._save_dir, f"session_{timestamp}")
+                    else:
+                        # Use the base save directory if it's empty or doesn't exist
+                        session_save_dir = self._save_dir
+
+                    os.makedirs(session_save_dir, exist_ok=True)
                     save_stats = {'count': 0}
                     save_stop_event = threading.Event()
                     save_start_time = time.time()
 
                     save_thread = threading.Thread(
                         target=self._save_thread,
-                        args=(save_queue, save_stop_event, self._save_dir, self._save_raw, save_stats)
+                        args=(save_queue, save_stop_event, session_save_dir, self._save_raw, save_stats)
                     )
                     save_thread.daemon = True
                     save_thread.start()
                     mode_str = "16-bit raw" if self._save_raw else "8-bit processed"
-                    print(f"Save mode: ON - Saving {mode_str} frames to {self._save_dir}/")
+                    print(f"Save mode: ON - Saving {mode_str} frames to {session_save_dir}/")
                 else:
                     # Stop saving and report stats
                     save_stop_event.set()
